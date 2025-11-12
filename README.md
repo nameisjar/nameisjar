@@ -1,4 +1,4 @@
-<h1 align="center"><img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=28&pause=1000&color=0000ff&background=FFFFFF00&center=true&vCenter=true&width=460&lines= Hi!+I'am+a+Software+Engineer;"></h1>
+<h1 align="center"><img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=28&pause=1000&color=0000ff&background=FFFFFF00&center=true&vCenter=true&width=460&lines=Hi,+I'm+a+Software+Engineer;"></h1>
 <!-- <h1 align="center"><img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=28&pause=1000&color=0000ff&background=FFFFFF00&center=true&vCenter=true&width=460&lines=Hi!+I'am+a+Software+Engineer;@Tutor Coding"></h1> -->
 
 <h1 align="center">Thanks for Visiting my GitHub Profile!</h1>
