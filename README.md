@@ -1,9 +1,8 @@
 <h1 align="center"><img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=28&pause=1000&color=0000ff&background=FFFFFF00&center=true&vCenter=true&width=460&lines=Hi,+I'm+a+Software+Engineer;"></h1>
-<!-- <h1 align="center"><img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=28&pause=1000&color=0000ff&background=FFFFFF00&center=true&vCenter=true&width=460&lines=Hi!+I'am+a+Software+Engineer;@Tutor Coding"></h1> -->
 
 <h1 align="center">Thanks for Visiting my GitHub Profile!</h1>
 <p align="center">
-  <img src="https://github.com/nameisjar/nameisjar/blob/output/github-contribution-grid-snake.svg">
+  <img src="https://github.com/nameisjar/nameisjar/raw/output/github-contribution-grid-snake.svg">
 </p>
 
 <p align="left">
@@ -11,7 +10,6 @@
 </p>
 
 <p align="center">
-  <!-- - <a href="https://visitcount.itsvg.in"><img src="https://visitcount.itsvg.in/api?id=nameisjar&label=Profile%20Views&color=6&icon=0&pretty=true" /></a>  -->
   <img src="https://komarev.com/ghpvc/?username=nameisjar&label=Profile%20views&color=0e75b6&style=plastic" alt="nameisjar" />
 </p>
 
@@ -43,10 +41,6 @@
         <img src="https://skillicons.dev/icons?i=css" width="48" height="48" alt="css" />
       <br>CSS
     </td>
-    <!-- <td align="center" width="96">
-        <img src="https://techstack-generator.vercel.app/eslint-icon.svg" alt="icon" width="65" height="65" />
-      <br>ESLint
-    </td> -->
   </tr>
   <tr>
     <td align="center"  width="96">
@@ -102,9 +96,6 @@
  </tr>
 </table>
 
-<!-- ## Connect With Me : -->
-<!-- 
-<a href="https://www.linkedin.com/in/nikomuhamadfajar" target="_blank"><img src="https://skillicons.dev/icons?i=linkedin" width="50" height="50" alt="Linkedin"/></a> -->
 
 <h1 align="center">Github Stats</h1>
 <p align="center">
