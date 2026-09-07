@@ -98,7 +98,7 @@ test('compression preserves every interpolated position, including turns and pau
   }
 });
 
-test('SVG includes synchronized growth, food removal, themes, and reduced motion', () => {
+test('SVG includes synchronized HUD, growth, food removal, themes, and reduced motion', () => {
   const result = simulate(calendar(2, () => true));
   for (const theme of ['light', 'dark']) {
     const svg = renderSvg(result, { theme, username: '<user & "name">' });
@@ -107,6 +107,15 @@ test('SVG includes synchronized growth, food removal, themes, and reduced motion
     assert.equal((svg.match(/animation-name:travel/g) || []).length, 8);
     assert.equal((svg.match(/@keyframes birth-/g) || []).length, 4);
     assert.equal((svg.match(/@keyframes food-/g) || []).length, 14);
+    assert.equal((svg.match(/@keyframes hud-/g) || []).length, 15);
+    assert.match(svg, /class="hud"/);
+    assert.match(svg, />SCORE</);
+    assert.match(svg, />LEVEL</);
+    assert.match(svg, />LENGTH</);
+    assert.match(svg, />COMBO</);
+    assert.match(svg, />1400</);
+    assert.match(svg, />08</);
+    assert.match(svg, />x4</);
     assert.match(svg, /prefers-reduced-motion:reduce/);
     assert.match(svg, /animation-iteration-count:infinite/);
     assert.match(svg, /animation-timing-function:steps\(1,end\)/);

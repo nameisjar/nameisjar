@@ -8,6 +8,9 @@ The snake starts with four segments. It gains one segment after eating three
 days do not count toward growth.
 Like a real snake game, the snake selects contribution cells as food, finds paths
 to them, avoids its own body, and follows its moving tail when a route is blocked.
+A synchronized HUD displays the current score, level, snake length, and combo.
+Every active cell awards 100 points, the level advances every ten cells, and the
+combo cycles through five stages.
 A full-board route is used only as a safety fallback for extreme calendars. The
 snake exits completely before the calendar resets. The animation uses SVG and
 CSS; it needs no embedded script.
@@ -38,3 +41,23 @@ used when explicitly requested; API errors fail the workflow before publishing.
 The workflow runs tests, generates both SVGs, then publishes `dist` to the existing
 `output` branch on pushes to `main`, daily, or via **Run workflow** in Actions.
 Generated files are ignored on the source branch.
+
+## Weekly coding activity
+
+The `waka-readme.yml` workflow updates the section between
+`START_SECTION:waka` and `END_SECTION:waka` once per day. To enable it:
+
+1. Create a WakaTime account and install its extension in your code editor.
+2. Add the WakaTime API key as a repository Actions secret named
+   `WAKATIME_API_KEY`.
+3. Run the **update coding stats** workflow manually once, or wait for its daily
+   schedule.
+
+If the secret is missing, the workflow exits successfully and leaves the setup
+message in the README unchanged. The API key is never written to the README.
+
+## Guestbook
+
+The guestbook uses `.github/ISSUE_TEMPLATE/guestbook.yml`. The README buttons
+open the form and list issues whose title begins with `[Guestbook]`, so no
+third-party guestbook service is required.

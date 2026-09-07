@@ -5,8 +5,24 @@ import { pathToFileURL } from 'node:url';
 const LEVELS = ['NONE', 'FIRST_QUARTILE', 'SECOND_QUARTILE', 'THIRD_QUARTILE', 'FOURTH_QUARTILE'];
 export const FOOD_PER_SEGMENT = 3;
 const THEMES = {
-  light: { dots: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'], snake: '#8250df', head: '#6639ba' },
-  dark: { dots: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'], snake: '#a371f7', head: '#d2a8ff' },
+  light: {
+    dots: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
+    snake: '#8250df',
+    head: '#6639ba',
+    hud: '#f6f8fa',
+    hudBorder: '#d0d7de',
+    hudLabel: '#57606a',
+    hudValue: '#6639ba',
+  },
+  dark: {
+    dots: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
+    snake: '#a371f7',
+    head: '#d2a8ff',
+    hud: '#0d1117',
+    hudBorder: '#30363d',
+    hudLabel: '#8b949e',
+    hudValue: '#d2a8ff',
+  },
 };
 const key = ({ x, y }) => `${x},${y}`;
 const escapeXml = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
@@ -250,15 +266,21 @@ export function renderSvg(simulation, { theme = 'light', username = 'GitHub' } =
   const { width, cells, frames, births, eatenAt, finalLength } = simulation;
   const pitch = 16;
   const padding = 24;
+  const boardTop = 52;
+  const svgWidth = width * pitch + padding * 2 - 4;
+  const svgHeight = boardTop + 7 * pitch + 16;
   const startPause = 10;
   const endPause = 16;
   const total = startPause + frames.length - 1 + endPause;
   const duration = (total * 0.09).toFixed(2);
   const percent = (t) => `${Number((t / total * 100).toFixed(6))}%`;
-  const position = (point) => ({ x: padding + Math.max(-2, Math.min(width + 1, point.x)) * pitch, y: padding + point.y * pitch });
+  const position = (point) => ({
+    x: padding + Math.max(-2, Math.min(width + 1, point.x)) * pitch,
+    y: boardTop + point.y * pitch,
+  });
   const styles = [
     `.moving{animation-duration:${duration}s;animation-iteration-count:infinite;animation-timing-function:linear}`,
-    '.food,.birth{animation-timing-function:steps(1,end)}',
+    '.food,.birth,.hud-frame{animation-timing-function:steps(1,end)}',
   ];
   // Segment i follows the head exactly i steps later. Share a single motion
   // animation instead of duplicating hundreds of nearly identical keyframes.
@@ -290,13 +312,51 @@ export function renderSvg(simulation, { theme = 'light', username = 'GitHub' } =
     }
     return rect;
   }).reverse().join('');
+
+  const eatenFrames = [...eatenAt.values()];
+  const hudStates = [0, ...eatenFrames].map((frame, eaten) => ({
+    frame: eaten === 0 ? 0 : startPause + frame,
+    score: eaten * 100,
+    level: 1 + Math.floor(eaten / 10),
+    length: 4 + Math.floor(eaten / FOOD_PER_SEGMENT),
+    combo: eaten === 0 ? 0 : ((eaten - 1) % 5) + 1,
+  }));
+  const tickAfter = (frame) => Math.min(total, frame + 0.001);
+  const hudFrames = hudStates.map((state, index) => {
+    const nextFrame = hudStates[index + 1]?.frame;
+    if (hudStates.length > 1) {
+      const keyframes = index === 0
+        ? `0%,${percent(nextFrame)}{opacity:1}${percent(tickAfter(nextFrame))},100%{opacity:0}`
+        : nextFrame === undefined
+          ? `0%,${percent(state.frame)}{opacity:0}${percent(tickAfter(state.frame))},100%{opacity:1}`
+          : `0%,${percent(state.frame)}{opacity:0}${percent(tickAfter(state.frame))},${percent(nextFrame)}{opacity:1}${percent(tickAfter(nextFrame))},100%{opacity:0}`;
+      styles.push(`@keyframes hud-${index}{${keyframes}}`);
+    }
+    const columnWidth = (svgWidth - 40) / 4;
+    const values = [
+      String(state.score).padStart(4, '0'),
+      String(state.level).padStart(2, '0'),
+      String(state.length).padStart(2, '0'),
+      `x${state.combo}`,
+    ].map((value, column) => `<text x="${20 + column * columnWidth}" y="35">${value}</text>`).join('');
+    const animation = hudStates.length > 1 ? ` class="hud-frame moving" style="animation-name:hud-${index};opacity:${index === 0 ? 1 : 0}"` : '';
+    return `<g${animation}>${values}</g>`;
+  }).join('');
+  const columnWidth = (svgWidth - 40) / 4;
+  const hudLabels = ['SCORE', 'LEVEL', 'LENGTH', 'COMBO']
+    .map((label, column) => `<text x="${20 + column * columnWidth}" y="20">${label}</text>`).join('');
+  const hud = `<g class="hud" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-weight="700">
+<rect x="8" y="5" width="${svgWidth - 16}" height="36" rx="8" fill="${palette.hud}" stroke="${palette.hudBorder}"/>
+<g fill="${palette.hudLabel}" font-size="8" letter-spacing="1">${hudLabels}</g>
+<g fill="${palette.hudValue}" font-size="13">${hudFrames}</g>
+</g>`;
   styles.push('@media(prefers-reduced-motion:reduce){.moving{animation:none!important}.snake{display:none}.food{opacity:1}}');
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width * pitch + padding * 2 - 4}" height="156" viewBox="0 0 ${width * pitch + padding * 2 - 4} 156" role="img" aria-labelledby="title description">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}" role="img" aria-labelledby="title description">
 <title id="title">${escapeXml(username)}'s growing contribution snake</title>
-<desc id="description">The snake gains one segment after every ${FOOD_PER_SEGMENT} active contribution cells it eats, growing from 4 to ${finalLength} segments. After its tail exits, the calendar resets. Reduced motion shows the complete calendar.</desc>
+<desc id="description">A game HUD tracks score, level, length, and combo. The snake gains one segment after every ${FOOD_PER_SEGMENT} active contribution cells it eats, growing from 4 to ${finalLength} segments. After its tail exits, the calendar resets. Reduced motion shows the complete calendar.</desc>
 <style>${styles.join('\n')}</style>
-<defs><clipPath id="board"><rect x="20" y="16" width="${width * pitch + 8}" height="124"/></clipPath></defs>
-${grid}<g class="snake" clip-path="url(#board)">${segments}</g>
+<defs><clipPath id="board"><rect x="20" y="48" width="${width * pitch + 8}" height="120"/></clipPath></defs>
+${hud}${grid}<g class="snake" clip-path="url(#board)">${segments}</g>
 </svg>\n`;
 }
 

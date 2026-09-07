@@ -1,0 +1,37 @@
+name: Sign the guestbook
+description: Leave Niko a friendly message, suggestion, or greeting.
+title: "[Guestbook] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for visiting my GitHub profile! Please leave a friendly message below.
+
+  - type: input
+    id: name
+    attributes:
+      label: Your name
+      description: How should I address you?
+      placeholder: Your name or GitHub username
+    validations:
+      required: true
+
+  - type: textarea
+    id: message
+    attributes:
+      label: Message
+      description: Share a greeting, suggestion, or anything positive.
+      placeholder: Write your guestbook message here...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: discovery
+    attributes:
+      label: How did you find my profile?
+      options:
+        - GitHub search
+        - A repository
+        - Social media
+        - A friend or community
+        - Other

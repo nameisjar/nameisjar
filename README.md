@@ -127,6 +127,25 @@
   <img width="88%" src="https://github-readme-streak-stats.herokuapp.com/?user=nameisjar&theme=tokyonight" />
 </p>
 
+<h2 align="center">&#x23F1;&#xFE0F; Weekly Coding Activity</h2>
+
+<!--START_SECTION:waka-->
+```text
+Coding statistics will appear here after WakaTime is connected.
+```
+<!--END_SECTION:waka-->
+
+<h2 align="center">&#x1F4D6; Guestbook</h2>
+
+<p align="center">
+  Thanks for visiting! Leave a friendly message, suggestion, or just say hello.
+</p>
+
+<p align="center">
+  <a href="https://github.com/nameisjar/nameisjar/issues/new?template=guestbook.yml"><img src="https://img.shields.io/badge/Sign_the_Guestbook-8250DF?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Sign the guestbook" /></a>
+  <a href="https://github.com/nameisjar/nameisjar/issues?q=is%3Aissue+%22%5BGuestbook%5D%22+in%3Atitle"><img src="https://img.shields.io/badge/Read_Messages-0969DA?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Read guestbook messages" /></a>
+</p>
+
 <!--
 [![GitHub Streak](http://github-readme-streak-stats.herokuapp.com?user=nameisjar&theme=tokyonight)](https://git.io/streak-stats)
 <a href="https://git.io/streak-stats"><img src="http://github-readme-streak-stats.herokuapp.com?user=nameisjar&theme=tokyonight" alt="GitHub Streak" /></a> 
