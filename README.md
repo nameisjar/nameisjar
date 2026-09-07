@@ -130,9 +130,13 @@
 <h2 align="center">&#x23F1;&#xFE0F; Weekly Coding Activity</h2>
 
 <!--START_SECTION:waka-->
+
 ```text
-Coding statistics will appear here after WakaTime is connected.
+Total Time: 0 secs
+
+No activity tracked
 ```
+
 <!--END_SECTION:waka-->
 
 <h2 align="center">&#x1F4D6; Guestbook</h2>
