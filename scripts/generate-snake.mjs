@@ -10,6 +10,69 @@ const THEMES = {
 const key = ({ x, y }) => `${x},${y}`;
 const escapeXml = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]);
 
+function calendarSeed(cells) {
+  let hash = 2166136261;
+  for (const cell of cells) {
+    for (const character of `${cell.date}:${cell.count};`) {
+      hash ^= character.charCodeAt(0);
+      hash = Math.imul(hash, 16777619);
+    }
+  }
+  return hash >>> 0;
+}
+
+function randomGenerator(seed) {
+  return () => {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let value = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Backbite moves turn the regular column sweep into an organic Hamiltonian
+// route. The saved route always has boundary endpoints, so the snake can enter
+// and leave cleanly while still visiting every cell exactly once.
+export function createRoute(width, height, seed) {
+  let route = [];
+  for (let x = 0; x < width; x++) {
+    for (let row = 0; row < height; row++) route.push({ x, y: x % 2 === 0 ? row : height - 1 - row });
+  }
+  let best = route;
+  const random = randomGenerator(seed);
+  const boundary = ({ x, y }) => x === 0 || x === width - 1 || y === 0 || y === height - 1;
+  const attempts = Math.max(500, route.length * 2);
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const indexes = new Map(route.map((point, index) => [key(point), index]));
+    const fromEnd = random() < 0.5;
+    const endpoint = fromEnd ? route.at(-1) : route[0];
+    const candidates = [
+      { x: endpoint.x - 1, y: endpoint.y },
+      { x: endpoint.x + 1, y: endpoint.y },
+      { x: endpoint.x, y: endpoint.y - 1 },
+      { x: endpoint.x, y: endpoint.y + 1 },
+    ].filter(({ x, y }) => x >= 0 && x < width && y >= 0 && y < height)
+      .map((point) => indexes.get(key(point)))
+      .filter((index) => fromEnd ? index < route.length - 2 : index > 1);
+
+    if (!candidates.length) continue;
+    const index = candidates[Math.floor(random() * candidates.length)];
+    route = fromEnd
+      ? route.slice(0, index + 1).concat(route.slice(index + 1).reverse())
+      : route.slice(0, index).reverse().concat(route.slice(index));
+    if (boundary(route[0]) && boundary(route.at(-1))) best = route;
+  }
+  return best;
+}
+
+function outwardDirection(point, width, height) {
+  if (point.x === 0) return { x: -1, y: 0 };
+  if (point.x === width - 1) return { x: 1, y: 0 };
+  if (point.y === 0) return { x: 0, y: -1 };
+  return { x: 0, y: 1 };
+}
+
 export function parseCalendar(calendar) {
   if (!Array.isArray(calendar?.weeks) || calendar.weeks.length < 1 || calendar.weeks.length > 54) {
     throw new Error('Expected a contribution calendar containing 1–54 weeks.');
@@ -56,11 +119,16 @@ export function simulate(calendar) {
   const { width, cells } = parseCalendar(calendar);
   const food = new Set(cells.filter((cell) => cell.count > 0).map(key));
   const eatenAt = new Map();
-  let body = Array.from({ length: 4 }, (_, i) => ({ x: -1 - i, y: 0 }));
+  const route = createRoute(width, 7, calendarSeed(cells));
+  const startDirection = outwardDirection(route[0], width, 7);
+  let body = Array.from({ length: 4 }, (_, i) => ({
+    x: route[0].x + startDirection.x * (i + 1),
+    y: route[0].y + startDirection.y * (i + 1),
+  }));
   const frames = [body];
   const births = [0, 0, 0, 0];
-  // Every grid position is visited exactly once. This remains collision-free
-  // even when every day contains food and the snake grows on every step.
+  // Every grid position is still visited exactly once. This remains
+  // collision-free even when every day contains food.
   const advance = (head) => {
     body = [head, ...body];
     if (food.delete(key(head))) {
@@ -71,14 +139,15 @@ export function simulate(calendar) {
     }
     frames.push(body);
   };
-  for (let x = 0; x < width; x++) {
-    for (let row = 0; row < 7; row++) advance({ x, y: x % 2 === 0 ? row : 6 - row });
-  }
-  // Continue beyond the right edge until the entire tail is outside the image.
-  const exitY = body[0].y;
+  for (const point of route) advance(point);
+  // Continue through the nearest edge until the entire tail is outside.
   const finalLength = body.length;
-  for (let step = 0; step < finalLength + 2; step++) advance({ x: width + step, y: exitY });
-  return { width, cells, frames, births, eatenAt, finalLength };
+  const end = route.at(-1);
+  const exitDirection = outwardDirection(end, width, 7);
+  for (let step = 1; step <= finalLength + 2; step++) {
+    advance({ x: end.x + exitDirection.x * step, y: end.y + exitDirection.y * step });
+  }
+  return { width, cells, frames, births, eatenAt, finalLength, route };
 }
 
 // Preserve turns and pauses, but omit intermediate points with equal velocity.

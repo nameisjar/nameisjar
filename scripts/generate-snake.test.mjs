@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { fetchCalendar, parseCalendar, renderSvg, simplify, simulate } from './generate-snake.mjs';
+import { createRoute, fetchCalendar, parseCalendar, renderSvg, simplify, simulate } from './generate-snake.mjs';
 
 function calendar(width, active = () => false) {
   return {
@@ -41,10 +41,31 @@ for (const [name, input] of [
     assert.equal(food.size, 0);
     assert.equal(result.eatenAt.size, originalFoodCount);
     assert.equal(result.finalLength, 4 + originalFoodCount);
-    assert.ok(result.frames.at(-1).every((c) => c.x >= result.width + 2));
+    assert.ok(result.frames.at(-1).every((c) => c.x < 0 || c.x >= result.width || c.y < 0 || c.y >= 7));
     assert.equal(result.births.length, result.finalLength);
   });
 }
+
+test('route is deterministic, organic, adjacent, unique, and edge-to-edge', () => {
+  const width = 53;
+  const height = 7;
+  const route = createRoute(width, height, 123456789);
+  assert.deepEqual(route, createRoute(width, height, 123456789));
+  assert.equal(route.length, width * height);
+  assert.equal(new Set(route.map((point) => `${point.x},${point.y}`)).size, route.length);
+  assert.ok([route[0], route.at(-1)].every(({ x, y }) => x === 0 || x === width - 1 || y === 0 || y === height - 1));
+  let turns = 0;
+  for (let index = 1; index < route.length; index++) {
+    assert.equal(Math.abs(route[index].x - route[index - 1].x) + Math.abs(route[index].y - route[index - 1].y), 1);
+    if (index > 1) {
+      const before = route[index - 2];
+      const current = route[index - 1];
+      const after = route[index];
+      if (current.x - before.x !== after.x - current.x || current.y - before.y !== after.y - current.y) turns++;
+    }
+  }
+  assert.ok(turns > 50, `expected an organic route, received only ${turns} turns`);
+});
 
 test('partial weeks keep weekday positions and do not create phantom food', () => {
   const input = calendar(2, () => true);
@@ -117,7 +138,7 @@ test('shared head trajectory with segment delay matches every visible body posit
     const result = simulate(input);
     for (const [frame, body] of result.frames.entries()) {
       for (const [index, segment] of body.entries()) {
-        if (segment.x < 0 || segment.x > result.width) continue;
+        if (segment.x < 0 || segment.x >= result.width || segment.y < 0 || segment.y >= 7) continue;
         assert.ok(frame >= index);
         assert.deepEqual(result.frames[frame - index][0], segment);
       }
