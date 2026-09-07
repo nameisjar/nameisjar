@@ -266,7 +266,7 @@ export function renderSvg(simulation, { theme = 'light', username = 'GitHub' } =
   const { width, cells, frames, births, eatenAt, finalLength } = simulation;
   const pitch = 16;
   const padding = 24;
-  const boardTop = 52;
+  const boardTop = 58;
   const svgWidth = width * pitch + padding * 2 - 4;
   const svgHeight = boardTop + 7 * pitch + 16;
   const startPause = 10;
@@ -294,7 +294,7 @@ export function renderSvg(simulation, { theme = 'light', username = 'GitHub' } =
   styles.push(`@keyframes travel{${simplify(points).map((p) => `${percent(p.t)}{transform:translate(${p.x}px,${p.y}px)}`).join('')}}`);
   const grid = cells.map((cell) => {
     const x = padding + cell.x * pitch;
-    const y = padding + cell.y * pitch;
+    const y = boardTop + cell.y * pitch;
     const rect = `x="${x}" y="${y}" width="12" height="12" rx="2"`;
     let markup = `<rect ${rect} fill="${palette.dots[0]}"/>`;
     if (cell.count > 0) {
@@ -355,7 +355,7 @@ export function renderSvg(simulation, { theme = 'light', username = 'GitHub' } =
 <title id="title">${escapeXml(username)}'s growing contribution snake</title>
 <desc id="description">A game HUD tracks score, level, length, and combo. The snake gains one segment after every ${FOOD_PER_SEGMENT} active contribution cells it eats, growing from 4 to ${finalLength} segments. After its tail exits, the calendar resets. Reduced motion shows the complete calendar.</desc>
 <style>${styles.join('\n')}</style>
-<defs><clipPath id="board"><rect x="20" y="48" width="${width * pitch + 8}" height="120"/></clipPath></defs>
+<defs><clipPath id="board"><rect x="20" y="${boardTop - 4}" width="${width * pitch + 8}" height="120"/></clipPath></defs>
 ${hud}${grid}<g class="snake" clip-path="url(#board)">${segments}</g>
 </svg>\n`;
 }

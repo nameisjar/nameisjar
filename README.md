@@ -18,8 +18,8 @@
 <h1 align="center">Thanks for Visiting my GitHub Profile!</h1>
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nameisjar/nameisjar/output/github-contribution-grid-snake-dark.svg">
-    <img src="https://raw.githubusercontent.com/nameisjar/nameisjar/output/github-contribution-grid-snake.svg" alt="Snake growing as it eats my GitHub contributions">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nameisjar/nameisjar/output/github-contribution-grid-snake-dark.svg?v=20260907-2">
+    <img src="https://raw.githubusercontent.com/nameisjar/nameisjar/output/github-contribution-grid-snake.svg?v=20260907-2" alt="Snake growing as it eats my GitHub contributions">
   </picture>
 </p>
 

@@ -116,6 +116,8 @@ test('SVG includes synchronized HUD, growth, food removal, themes, and reduced m
     assert.match(svg, />1400</);
     assert.match(svg, />08</);
     assert.match(svg, />x4</);
+    assert.match(svg, /y="58" width="12" height="12"/);
+    assert.doesNotMatch(svg, /y="24" width="12" height="12"/);
     assert.match(svg, /prefers-reduced-motion:reduce/);
     assert.match(svg, /animation-iteration-count:infinite/);
     assert.match(svg, /animation-timing-function:steps\(1,end\)/);
