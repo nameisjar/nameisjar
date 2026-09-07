@@ -3,8 +3,9 @@
 The dependency-free Node.js 22 generator fetches the repository owner's GitHub
 contribution calendar and creates light/dark SVGs for the profile README.
 
-The snake starts with four segments. Each **active day** adds exactly one segment,
-regardless of that day's contribution count. Empty days do not cause growth.
+The snake starts with four segments. It gains one segment after eating three
+**active contribution cells**, so growth is gradual instead of immediate. Empty
+days do not count toward growth.
 Like a real snake game, the snake selects contribution cells as food, finds paths
 to them, avoids its own body, and follows its moving tail when a route is blocked.
 A full-board route is used only as a safety fallback for extreme calendars. The

@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const LEVELS = ['NONE', 'FIRST_QUARTILE', 'SECOND_QUARTILE', 'THIRD_QUARTILE', 'FOURTH_QUARTILE'];
+export const FOOD_PER_SEGMENT = 3;
 const THEMES = {
   light: { dots: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'], snake: '#8250df', head: '#6639ba' },
   dark: { dots: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'], snake: '#a371f7', head: '#d2a8ff' },
@@ -139,14 +140,17 @@ export function simulate(calendar) {
     const births = [0, 0, 0, 0];
     const route = [];
     const advance = (head) => {
-      const ate = food.delete(key(head));
-      const occupied = ate ? body : body.slice(0, -1);
+      const willEat = food.has(key(head));
+      const willGrow = willEat && (eatenAt.size + 1) % FOOD_PER_SEGMENT === 0;
+      const occupied = willGrow ? body : body.slice(0, -1);
       if (occupied.some((point) => point.x === head.x && point.y === head.y)) return false;
+      const ate = food.delete(key(head));
       body = [head, ...body];
       if (ate) {
         eatenAt.set(key(head), frames.length);
-        births.push(frames.length);
-      } else body.pop();
+        if (willGrow) births.push(frames.length);
+      }
+      if (!willGrow) body.pop();
       frames.push(body);
       route.push(head);
       return true;
@@ -167,10 +171,10 @@ export function simulate(calendar) {
           y: body[0].y + direction.y,
         })).filter((next) => {
           if (next.x < -2 || next.x > width + 1 || next.y < -2 || next.y > 8) return false;
-          const grows = food.has(key(next));
+          const grows = food.has(key(next)) && (eatenAt.size + 1) % FOOD_PER_SEGMENT === 0;
           return !(grows ? body : body.slice(0, -1)).some((point) => key(point) === key(next));
         }).map((next) => {
-          const grows = food.has(key(next));
+          const grows = food.has(key(next)) && (eatenAt.size + 1) % FOOD_PER_SEGMENT === 0;
           const nextBody = [next, ...body];
           if (!grows) nextBody.pop();
           const nextTail = nextBody.at(-1);
@@ -289,7 +293,7 @@ export function renderSvg(simulation, { theme = 'light', username = 'GitHub' } =
   styles.push('@media(prefers-reduced-motion:reduce){.moving{animation:none!important}.snake{display:none}.food{opacity:1}}');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width * pitch + padding * 2 - 4}" height="156" viewBox="0 0 ${width * pitch + padding * 2 - 4} 156" role="img" aria-labelledby="title description">
 <title id="title">${escapeXml(username)}'s growing contribution snake</title>
-<desc id="description">The snake gains one segment per active contribution day, growing from 4 to ${finalLength} segments. After its tail exits, the calendar resets. Reduced motion shows the complete calendar.</desc>
+<desc id="description">The snake gains one segment after every ${FOOD_PER_SEGMENT} active contribution cells it eats, growing from 4 to ${finalLength} segments. After its tail exits, the calendar resets. Reduced motion shows the complete calendar.</desc>
 <style>${styles.join('\n')}</style>
 <defs><clipPath id="board"><rect x="20" y="16" width="${width * pitch + 8}" height="124"/></clipPath></defs>
 ${grid}<g class="snake" clip-path="url(#board)">${segments}</g>

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { fetchCalendar, parseCalendar, renderSvg, simplify, simulate } from './generate-snake.mjs';
+import { FOOD_PER_SEGMENT, fetchCalendar, parseCalendar, renderSvg, simplify, simulate } from './generate-snake.mjs';
 
 function calendar(width, active = () => false) {
   return {
@@ -26,12 +26,15 @@ for (const [name, input] of [
     const result = simulate(input);
     const food = new Set(result.cells.filter((c) => c.count > 0).map((c) => `${c.x},${c.y}`));
     const originalFoodCount = food.size;
+    let eaten = 0;
     for (let i = 1; i < result.frames.length; i++) {
       const previous = result.frames[i - 1];
       const body = result.frames[i];
       const eating = food.delete(`${body[0].x},${body[0].y}`);
-      assert.equal(body.length, previous.length + Number(eating));
-      assert.deepEqual(body.slice(1), eating ? previous : previous.slice(0, -1));
+      if (eating) eaten++;
+      const growing = eating && eaten % FOOD_PER_SEGMENT === 0;
+      assert.equal(body.length, previous.length + Number(growing));
+      assert.deepEqual(body.slice(1), growing ? previous : previous.slice(0, -1));
       assert.equal(Math.abs(body[0].x - previous[0].x) + Math.abs(body[0].y - previous[0].y), 1);
       assert.equal(new Set(body.map((c) => `${c.x},${c.y}`)).size, body.length);
       for (let j = 1; j < body.length; j++) {
@@ -40,7 +43,7 @@ for (const [name, input] of [
     }
     assert.equal(food.size, 0);
     assert.equal(result.eatenAt.size, originalFoodCount);
-    assert.equal(result.finalLength, 4 + originalFoodCount);
+    assert.equal(result.finalLength, 4 + Math.floor(originalFoodCount / FOOD_PER_SEGMENT));
     assert.ok(result.frames.at(-1).every((c) => c.x < 0 || c.x >= result.width || c.y < 0 || c.y >= 7));
     assert.equal(result.births.length, result.finalLength);
   });
@@ -62,7 +65,7 @@ test('partial weeks keep weekday positions and do not create phantom food', () =
   input.weeks[1].contributionDays = input.weeks[1].contributionDays.slice(0, 2);
   const result = simulate(input);
   assert.equal(result.cells.length, 6);
-  assert.equal(result.finalLength, 10);
+  assert.equal(result.finalLength, 6);
   assert.equal(result.eatenAt.has('0,0'), false);
   assert.equal(result.eatenAt.has('1,6'), false);
 });
@@ -101,15 +104,16 @@ test('SVG includes synchronized growth, food removal, themes, and reduced motion
     const svg = renderSvg(result, { theme, username: '<user & "name">' });
     assert.match(svg, /&lt;user &amp; &quot;name&quot;&gt;/);
     assert.equal((svg.match(/@keyframes travel/g) || []).length, 1);
-    assert.equal((svg.match(/animation-name:travel/g) || []).length, 18);
-    assert.equal((svg.match(/@keyframes birth-/g) || []).length, 14);
+    assert.equal((svg.match(/animation-name:travel/g) || []).length, 8);
+    assert.equal((svg.match(/@keyframes birth-/g) || []).length, 4);
     assert.equal((svg.match(/@keyframes food-/g) || []).length, 14);
     assert.match(svg, /prefers-reduced-motion:reduce/);
     assert.match(svg, /animation-iteration-count:infinite/);
     assert.match(svg, /animation-timing-function:steps\(1,end\)/);
     assert.doesNotMatch(svg, /NaN|undefined|<script/);
-    for (const [cell, frame] of result.eatenAt) {
+    for (const [eatenIndex, [cell, frame]] of [...result.eatenAt].entries()) {
       const foodTime = svg.match(new RegExp(`@keyframes food-${cell.replace(',', '-')}\\{0%\\{opacity:1\\}([\\d.]+)%`))[1];
+      if ((eatenIndex + 1) % FOOD_PER_SEGMENT !== 0) continue;
       const index = result.births.indexOf(frame);
       const birthTime = svg.match(new RegExp(`@keyframes birth-${index}\\{0%\\{opacity:0\\}([\\d.]+)%`))[1];
       assert.equal(foodTime, birthTime);
