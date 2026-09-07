@@ -280,7 +280,7 @@ export function renderSvg(simulation, { theme = 'light', username = 'GitHub' } =
   });
   const styles = [
     `.moving{animation-duration:${duration}s;animation-iteration-count:infinite;animation-timing-function:linear}`,
-    '.food,.birth,.hud-frame{animation-timing-function:steps(1,end)}',
+    '.food,.birth,.hud-values{animation-timing-function:steps(1,end)}',
   ];
   // Segment i follows the head exactly i steps later. Share a single motion
   // animation instead of duplicating hundreds of nearly identical keyframes.
@@ -321,28 +321,26 @@ export function renderSvg(simulation, { theme = 'light', username = 'GitHub' } =
     length: 4 + Math.floor(eaten / FOOD_PER_SEGMENT),
     combo: eaten === 0 ? 0 : ((eaten - 1) % 5) + 1,
   }));
-  const tickAfter = (frame) => Math.min(total, frame + 0.001);
-  const hudFrames = hudStates.map((state, index) => {
-    const nextFrame = hudStates[index + 1]?.frame;
-    if (hudStates.length > 1) {
-      const keyframes = index === 0
-        ? `0%,${percent(nextFrame)}{opacity:1}${percent(tickAfter(nextFrame))},100%{opacity:0}`
-        : nextFrame === undefined
-          ? `0%,${percent(state.frame)}{opacity:0}${percent(tickAfter(state.frame))},100%{opacity:1}`
-          : `0%,${percent(state.frame)}{opacity:0}${percent(tickAfter(state.frame))},${percent(nextFrame)}{opacity:1}${percent(tickAfter(nextFrame))},100%{opacity:0}`;
-      styles.push(`@keyframes hud-${index}{${keyframes}}`);
-    }
-    const columnWidth = (svgWidth - 40) / 4;
+  const hudRowHeight = 18;
+  if (hudStates.length > 1) {
+    const keyframes = hudStates.map((state, index) =>
+      `${percent(state.frame)}{transform:translateY(-${index * hudRowHeight}px)}`).join('');
+    styles.push(`@keyframes hud-values{${keyframes}100%{transform:translateY(-${(hudStates.length - 1) * hudRowHeight}px)}}`);
+  }
+  const columnWidth = (svgWidth - 40) / 4;
+  const hudRows = hudStates.map((state, index) => {
     const values = [
       String(state.score).padStart(4, '0'),
       String(state.level).padStart(2, '0'),
       String(state.length).padStart(2, '0'),
       `x${state.combo}`,
-    ].map((value, column) => `<text x="${20 + column * columnWidth}" y="35">${value}</text>`).join('');
-    const animation = hudStates.length > 1 ? ` class="hud-frame moving" style="animation-name:hud-${index};opacity:${index === 0 ? 1 : 0}"` : '';
-    return `<g${animation}>${values}</g>`;
+    ].map((value, column) => `<text x="${20 + column * columnWidth}" y="${35 + index * hudRowHeight}">${value}</text>`).join('');
+    return `<g>${values}</g>`;
   }).join('');
-  const columnWidth = (svgWidth - 40) / 4;
+  const hudAnimation = hudStates.length > 1
+    ? ' class="hud-values moving" style="animation-name:hud-values;transform:translateY(0)"'
+    : '';
+  const hudFrames = `<g clip-path="url(#hud-window)"><g${hudAnimation}>${hudRows}</g></g>`;
   const hudLabels = ['SCORE', 'LEVEL', 'LENGTH', 'COMBO']
     .map((label, column) => `<text x="${20 + column * columnWidth}" y="20">${label}</text>`).join('');
   const hud = `<g class="hud" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" font-weight="700">
@@ -355,7 +353,10 @@ export function renderSvg(simulation, { theme = 'light', username = 'GitHub' } =
 <title id="title">${escapeXml(username)}'s growing contribution snake</title>
 <desc id="description">A game HUD tracks score, level, length, and combo. The snake gains one segment after every ${FOOD_PER_SEGMENT} active contribution cells it eats, growing from 4 to ${finalLength} segments. After its tail exits, the calendar resets. Reduced motion shows the complete calendar.</desc>
 <style>${styles.join('\n')}</style>
-<defs><clipPath id="board"><rect x="20" y="${boardTop - 4}" width="${width * pitch + 8}" height="120"/></clipPath></defs>
+<defs>
+<clipPath id="board"><rect x="20" y="${boardTop - 4}" width="${width * pitch + 8}" height="120"/></clipPath>
+<clipPath id="hud-window"><rect x="16" y="22" width="${svgWidth - 32}" height="17"/></clipPath>
+</defs>
 ${hud}${grid}<g class="snake" clip-path="url(#board)">${segments}</g>
 </svg>\n`;
 }

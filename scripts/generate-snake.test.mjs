@@ -107,8 +107,11 @@ test('SVG includes synchronized HUD, growth, food removal, themes, and reduced m
     assert.equal((svg.match(/animation-name:travel/g) || []).length, 8);
     assert.equal((svg.match(/@keyframes birth-/g) || []).length, 4);
     assert.equal((svg.match(/@keyframes food-/g) || []).length, 14);
-    assert.equal((svg.match(/@keyframes hud-/g) || []).length, 15);
+    assert.equal((svg.match(/@keyframes hud-values/g) || []).length, 1);
     assert.match(svg, /class="hud"/);
+    assert.match(svg, /clipPath id="hud-window"/);
+    assert.match(svg, /class="hud-values moving"/);
+    assert.doesNotMatch(svg, /class="hud-frame/);
     assert.match(svg, />SCORE</);
     assert.match(svg, />LEVEL</);
     assert.match(svg, />LENGTH</);
