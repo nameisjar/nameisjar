@@ -30,46 +30,60 @@ function randomGenerator(seed) {
   };
 }
 
-// Backbite moves turn the regular column sweep into an organic Hamiltonian
-// route. The saved route always has boundary endpoints, so the snake can enter
-// and leave cleanly while still visiting every cell exactly once.
-export function createRoute(width, height, seed) {
-  let route = [];
-  for (let x = 0; x < width; x++) {
-    for (let row = 0; row < height; row++) route.push({ x, y: x % 2 === 0 ? row : height - 1 - row });
+function createSafeRoute(width, height) {
+  const route = [];
+  for (let y = 0; y < height; y++) {
+    for (let column = 0; column < width; column++) route.push({ x: y % 2 === 0 ? column : width - 1 - column, y });
   }
-  let best = route;
-  const random = randomGenerator(seed);
-  const boundary = ({ x, y }) => x === 0 || x === width - 1 || y === 0 || y === height - 1;
-  const attempts = Math.max(500, route.length * 2);
-
-  for (let attempt = 0; attempt < attempts; attempt++) {
-    const indexes = new Map(route.map((point, index) => [key(point), index]));
-    const fromEnd = random() < 0.5;
-    const endpoint = fromEnd ? route.at(-1) : route[0];
-    const candidates = [
-      { x: endpoint.x - 1, y: endpoint.y },
-      { x: endpoint.x + 1, y: endpoint.y },
-      { x: endpoint.x, y: endpoint.y - 1 },
-      { x: endpoint.x, y: endpoint.y + 1 },
-    ].filter(({ x, y }) => x >= 0 && x < width && y >= 0 && y < height)
-      .map((point) => indexes.get(key(point)))
-      .filter((index) => fromEnd ? index < route.length - 2 : index > 1);
-
-    if (!candidates.length) continue;
-    const index = candidates[Math.floor(random() * candidates.length)];
-    route = fromEnd
-      ? route.slice(0, index + 1).concat(route.slice(index + 1).reverse())
-      : route.slice(0, index).reverse().concat(route.slice(index));
-    if (boundary(route[0]) && boundary(route.at(-1))) best = route;
-  }
-  return best;
+  return route;
 }
 
-function outwardDirection(point, width, height) {
-  if (point.x === 0) return { x: -1, y: 0 };
-  if (point.x === width - 1) return { x: 1, y: 0 };
-  if (point.y === 0) return { x: 0, y: -1 };
+function shuffle(values, random) {
+  for (let index = values.length - 1; index > 0; index--) {
+    const other = Math.floor(random() * (index + 1));
+    [values[index], values[other]] = [values[other], values[index]];
+  }
+  return values;
+}
+
+function findPath(start, target, blocked, width, height, variation = 0) {
+  const startKey = key(start);
+  const parents = new Map([[startKey, null]]);
+  const points = new Map([[startKey, start]]);
+  const queue = [start];
+  const directions = [{ x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }, { x: 0, y: -1 }];
+
+  for (let cursor = 0; cursor < queue.length; cursor++) {
+    const point = queue[cursor];
+    if (target(point)) {
+      const path = [];
+      let pointKey = key(point);
+      while (parents.get(pointKey) !== null) {
+        path.push(points.get(pointKey));
+        pointKey = parents.get(pointKey);
+      }
+      return path.reverse();
+    }
+
+    const offset = Math.abs(Math.imul(point.x + 3, 73856093) ^ Math.imul(point.y + 3, 19349663) ^ variation) % 4;
+    for (let index = 0; index < directions.length; index++) {
+      const direction = directions[(index + offset) % directions.length];
+      const next = { x: point.x + direction.x, y: point.y + direction.y };
+      const nextKey = key(next);
+      if (next.x < -2 || next.x > width + 1 || next.y < -2 || next.y > height + 1
+        || blocked.has(nextKey) || parents.has(nextKey)) continue;
+      parents.set(nextKey, key(point));
+      points.set(nextKey, next);
+      queue.push(next);
+    }
+  }
+  return null;
+}
+
+function outsideDirection(point, width, height) {
+  if (point.x < 0) return { x: -1, y: 0 };
+  if (point.x >= width) return { x: 1, y: 0 };
+  if (point.y < 0) return { x: 0, y: -1 };
   return { x: 0, y: 1 };
 }
 
@@ -117,37 +131,102 @@ export async function fetchCalendar(username, token, fetchImpl = fetch) {
 
 export function simulate(calendar) {
   const { width, cells } = parseCalendar(calendar);
-  const food = new Set(cells.filter((cell) => cell.count > 0).map(key));
-  const eatenAt = new Map();
-  const route = createRoute(width, 7, calendarSeed(cells));
-  const startDirection = outwardDirection(route[0], width, 7);
-  let body = Array.from({ length: 4 }, (_, i) => ({
-    x: route[0].x + startDirection.x * (i + 1),
-    y: route[0].y + startDirection.y * (i + 1),
-  }));
-  const frames = [body];
-  const births = [0, 0, 0, 0];
-  // Every grid position is still visited exactly once. This remains
-  // collision-free even when every day contains food.
-  const advance = (head) => {
-    body = [head, ...body];
-    if (food.delete(key(head))) {
-      eatenAt.set(key(head), frames.length);
-      births.push(frames.length);
+  const run = (gameMode) => {
+    const food = new Set(cells.filter((cell) => cell.count > 0).map(key));
+    const eatenAt = new Map();
+    let body = Array.from({ length: 4 }, (_, index) => ({ x: -1 - index, y: gameMode ? 3 : 0 }));
+    const frames = [body];
+    const births = [0, 0, 0, 0];
+    const route = [];
+    const advance = (head) => {
+      const ate = food.delete(key(head));
+      const occupied = ate ? body : body.slice(0, -1);
+      if (occupied.some((point) => point.x === head.x && point.y === head.y)) return false;
+      body = [head, ...body];
+      if (ate) {
+        eatenAt.set(key(head), frames.length);
+        births.push(frames.length);
+      } else body.pop();
+      frames.push(body);
+      route.push(head);
+      return true;
+    };
+
+    if (gameMode) {
+      const random = randomGenerator(calendarSeed(cells));
+      const targets = shuffle(cells.filter((cell) => cell.count > 0).map(({ x, y }) => ({ x, y })), random);
+      const maxSteps = width * 7 * 12 + targets.length * 8;
+      let steps = 0;
+
+      while (food.size && steps++ < maxSteps) {
+        const directions = shuffle([
+          { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }, { x: 0, y: -1 },
+        ], random);
+        const legalMoves = directions.map((direction) => ({
+          x: body[0].x + direction.x,
+          y: body[0].y + direction.y,
+        })).filter((next) => {
+          if (next.x < -2 || next.x > width + 1 || next.y < -2 || next.y > 8) return false;
+          const grows = food.has(key(next));
+          return !(grows ? body : body.slice(0, -1)).some((point) => key(point) === key(next));
+        }).map((next) => {
+          const grows = food.has(key(next));
+          const nextBody = [next, ...body];
+          if (!grows) nextBody.pop();
+          const nextTail = nextBody.at(-1);
+          const nextBlocked = new Set(nextBody.slice(0, -1).map(key));
+          const tailPath = findPath(next, (point) => point.x === nextTail.x && point.y === nextTail.y,
+            nextBlocked, width, 7, Math.floor(random() * 0x7fffffff));
+          return { next, nextBlocked, safe: tailPath !== null };
+        });
+        const safeMoves = legalMoves.filter(({ safe }) => safe);
+        const moves = safeMoves.length ? safeMoves : legalMoves;
+
+        let choice = null;
+        for (const target of targets) {
+          if (!food.has(key(target))) continue;
+          const options = moves.map((move) => ({
+            ...move,
+            path: findPath(move.next, (point) => point.x === target.x && point.y === target.y,
+              move.nextBlocked, width, 7, Math.floor(random() * 0x7fffffff)),
+          })).filter(({ path }) => path !== null)
+            .sort((a, b) => a.path.length - b.path.length);
+          if (options.length) {
+            choice = options[0].next;
+            break;
+          }
+        }
+
+        // If the body temporarily separates every food cell, keep moving safely
+        // alongside the tail until a route opens again.
+        if (!choice) choice = moves[0]?.next;
+        if (!choice || !advance(choice)) return null;
+      }
+      if (food.size) return null;
     } else {
-      body.pop();
+      for (const point of createSafeRoute(width, 7)) {
+        if (!advance(point)) return null;
+      }
     }
-    frames.push(body);
+
+    const finalLength = body.length;
+    const blocked = new Set(body.slice(0, -1).map(key));
+    const exitPath = findPath(body[0], (point) => point.x < 0 || point.x >= width || point.y < 0 || point.y >= 7,
+      blocked, width, 7, calendarSeed(cells));
+    if (!exitPath) return null;
+    for (const point of exitPath) if (!advance(point)) return null;
+
+    const direction = outsideDirection(body[0], width, 7);
+    for (let step = 0; step < finalLength + 2; step++) {
+      const head = body[0];
+      if (!advance({ x: head.x + direction.x, y: head.y + direction.y })) return null;
+    }
+    return { width, cells, frames, births, eatenAt, finalLength, route, strategy: gameMode ? 'game' : 'safe-route' };
   };
-  for (const point of route) advance(point);
-  // Continue through the nearest edge until the entire tail is outside.
-  const finalLength = body.length;
-  const end = route.at(-1);
-  const exitDirection = outwardDirection(end, width, 7);
-  for (let step = 1; step <= finalLength + 2; step++) {
-    advance({ x: end.x + exitDirection.x * step, y: end.y + exitDirection.y * step });
-  }
-  return { width, cells, frames, births, eatenAt, finalLength, route };
+
+  // Dense or adversarial calendars can fill the entire board. The exhaustive
+  // route is retained only as a guaranteed fallback for those extreme inputs.
+  return run(true) || run(false);
 }
 
 // Preserve turns and pauses, but omit intermediate points with equal velocity.

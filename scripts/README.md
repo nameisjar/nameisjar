@@ -5,10 +5,11 @@ contribution calendar and creates light/dark SVGs for the profile README.
 
 The snake starts with four segments. Each **active day** adds exactly one segment,
 regardless of that day's contribution count. Empty days do not cause growth.
-A deterministic randomized route visits each position once, giving the snake an
-organic movement without risking a collision, even on a fully active calendar.
-It exits completely before the calendar resets. The animation uses SVG and CSS;
-it needs no embedded script.
+Like a real snake game, the snake selects contribution cells as food, finds paths
+to them, avoids its own body, and follows its moving tail when a route is blocked.
+A full-board route is used only as a safety fallback for extreme calendars. The
+snake exits completely before the calendar resets. The animation uses SVG and
+CSS; it needs no embedded script.
 Reduced-motion preferences show the complete, static contribution calendar.
 
 ## Local checks

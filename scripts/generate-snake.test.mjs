@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createRoute, fetchCalendar, parseCalendar, renderSvg, simplify, simulate } from './generate-snake.mjs';
+import { fetchCalendar, parseCalendar, renderSvg, simplify, simulate } from './generate-snake.mjs';
 
 function calendar(width, active = () => false) {
   return {
@@ -46,25 +46,14 @@ for (const [name, input] of [
   });
 }
 
-test('route is deterministic, organic, adjacent, unique, and edge-to-edge', () => {
+test('sparse calendar uses game-like food seeking instead of sweeping every cell', () => {
   const width = 53;
-  const height = 7;
-  const route = createRoute(width, height, 123456789);
-  assert.deepEqual(route, createRoute(width, height, 123456789));
-  assert.equal(route.length, width * height);
-  assert.equal(new Set(route.map((point) => `${point.x},${point.y}`)).size, route.length);
-  assert.ok([route[0], route.at(-1)].every(({ x, y }) => x === 0 || x === width - 1 || y === 0 || y === height - 1));
-  let turns = 0;
-  for (let index = 1; index < route.length; index++) {
-    assert.equal(Math.abs(route[index].x - route[index - 1].x) + Math.abs(route[index].y - route[index - 1].y), 1);
-    if (index > 1) {
-      const before = route[index - 2];
-      const current = route[index - 1];
-      const after = route[index];
-      if (current.x - before.x !== after.x - current.x || current.y - before.y !== after.y - current.y) turns++;
-    }
-  }
-  assert.ok(turns > 50, `expected an organic route, received only ${turns} turns`);
+  const result = simulate(calendar(width, (x, y) => (x * 7 + y) % 11 === 0));
+  const boardCells = result.route.filter(({ x, y }) => x >= 0 && x < width && y >= 0 && y < 7);
+  assert.equal(result.strategy, 'game');
+  assert.ok(new Set(boardCells.map((point) => `${point.x},${point.y}`)).size < width * 7);
+  assert.ok(boardCells.some((point, index) => index > 0 && point.y === boardCells[index - 1].y));
+  assert.ok(boardCells.some((point, index) => index > 0 && point.x === boardCells[index - 1].x));
 });
 
 test('partial weeks keep weekday positions and do not create phantom food', () => {
@@ -100,8 +89,8 @@ test('compression preserves every interpolated position, including turns and pau
       const end = compressed[endIndex];
       const start = compressed[Math.max(0, endIndex - 1)];
       const fraction = end.t === start.t ? 0 : (point.t - start.t) / (end.t - start.t);
-      assert.equal(start.x + (end.x - start.x) * fraction, point.x);
-      assert.equal(start.y + (end.y - start.y) * fraction, point.y);
+      assert.ok(Math.abs(start.x + (end.x - start.x) * fraction - point.x) < 1e-9);
+      assert.ok(Math.abs(start.y + (end.y - start.y) * fraction - point.y) < 1e-9);
     }
   }
 });
