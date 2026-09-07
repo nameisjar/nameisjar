@@ -1,17 +1,21 @@
 name: generate animation
 
 on:
-  # run automatically every 24 hours
+  # run daily at 00:00 UTC (09:00 WIT)
   schedule:
-    - cron: "0 */24 * * *"
+    - cron: "0 0 * * *"
 
   # allows to manually run the job at any time
   workflow_dispatch:
 
-  # run on every push on the master branch
+  # run on every push on the main branch
   push:
     branches:
       - main
+
+concurrency:
+  group: contribution-snake
+  cancel-in-progress: false
 
 jobs:
   generate:
@@ -21,14 +25,21 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      # generates a snake game from a github user (<github_user_name>) contributions graph, output a svg animation at <svg_out_path>
-      - name: generate github-contribution-grid-snake.svg
-        uses: Platane/snk/svg-only@v3
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
         with:
-          github_user_name: ${{ github.repository_owner }}
-          outputs: |
-            dist/github-contribution-grid-snake.svg
-            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
+          node-version: '22'
+          package-manager-cache: false
+
+      - name: Test snake growth and animation
+        run: node --test scripts/generate-snake.test.mjs
+
+      - name: Generate growing contribution snake
+        run: node scripts/generate-snake.mjs
+        env:
+          GITHUB_USER: ${{ github.repository_owner }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # push the content of <build_dir> to a branch
       # the content will be available at https://raw.githubusercontent.com/<github_user>/<repository>/<target_branch>/<file> , or as github page
