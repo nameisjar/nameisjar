@@ -9,7 +9,7 @@
 </p>
 
 <p align="left">
-  <a href="https://github.com/soulteary/github-profile-trophy"><img src="https://raw.githubusercontent.com/nameisjar/nameisjar/output/github-profile-trophy.svg" alt="GitHub profile trophies" /></a>
+  <a href="https://github.com/soulteary/github-profile-trophy"><img src="https://raw.githubusercontent.com/nameisjar/nameisjar/output/github-profile-trophy.svg?v=20260907-1" alt="GitHub profile trophies" /></a>
 </p>
 
 <p align="center">
@@ -102,8 +102,8 @@
 
 <h1 align="center">Github Stats</h1>
 <p align="center">
-<img align="left" width="45%" src="https://raw.githubusercontent.com/nameisjar/nameisjar/output/top-languages.svg" alt="Most used languages" />
-<img align="right" width="50%" src="https://raw.githubusercontent.com/nameisjar/nameisjar/output/github-stats.svg" alt="GitHub statistics" />
+<img align="left" width="45%" src="https://raw.githubusercontent.com/nameisjar/nameisjar/output/top-languages.svg?v=20260907-1" alt="Most used languages" />
+<img align="right" width="50%" src="https://raw.githubusercontent.com/nameisjar/nameisjar/output/github-stats.svg?v=20260907-1" alt="GitHub statistics" />
 </p>
 
 <br><br><br><br><br><br><br><br><br><br>
