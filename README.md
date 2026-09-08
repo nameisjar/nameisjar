@@ -132,9 +132,10 @@
 <!--START_SECTION:waka-->
 
 ```text
-Total Time: 0 secs
+Total Time: 5 mins
 
-No activity tracked
+Markdown     3 mins                ███████████████░░░░░░░░░░   60.53 %
+JavaScript   2 mins                ██████████░░░░░░░░░░░░░░░   39.47 %
 ```
 
 <!--END_SECTION:waka-->
