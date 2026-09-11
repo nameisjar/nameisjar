@@ -132,13 +132,13 @@
 <!--START_SECTION:waka-->
 
 ```text
-Total Time: 37 mins
+Total Time: 3 hrs 8 mins
 
-Vue          24 mins               ████████████████▓░░░░░░░░   66.07 %
-Prisma       6 mins                ████▒░░░░░░░░░░░░░░░░░░░░   17.27 %
-Markdown     3 mins                ██▒░░░░░░░░░░░░░░░░░░░░░░   08.73 %
-JavaScript   2 mins                █▓░░░░░░░░░░░░░░░░░░░░░░░   06.97 %
-Other        0 secs                ▒░░░░░░░░░░░░░░░░░░░░░░░░   00.96 %
+Vue          2 hrs 19 mins         ██████████████▓░░░░░░░░░░   58.60 %
+Other        49 mins               █████▒░░░░░░░░░░░░░░░░░░░   20.72 %
+JavaScript   39 mins               ████░░░░░░░░░░░░░░░░░░░░░   16.57 %
+Prisma       6 mins                ▓░░░░░░░░░░░░░░░░░░░░░░░░   02.73 %
+Markdown     3 mins                ▒░░░░░░░░░░░░░░░░░░░░░░░░   01.38 %
 ```
 
 <!--END_SECTION:waka-->
