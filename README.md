@@ -132,14 +132,14 @@
 <!--START_SECTION:waka-->
 
 ```text
-Total Time: 9 hrs 7 mins
+Total Time: 9 hrs 59 mins
 
-TypeScript    5 hrs 13 mins         █████████████▓░░░░░░░░░░░   54.03 %
-CSS           3 hrs 11 mins         ████████▒░░░░░░░░░░░░░░░░   33.02 %
-JavaScript    32 mins               █▒░░░░░░░░░░░░░░░░░░░░░░░   05.53 %
-Other         31 mins               █▒░░░░░░░░░░░░░░░░░░░░░░░   05.50 %
-Image (svg)   6 mins                ▒░░░░░░░░░░░░░░░░░░░░░░░░   01.13 %
-PowerShell    3 mins                ░░░░░░░░░░░░░░░░░░░░░░░░░   00.64 %
+TypeScript    5 hrs 29 mins         ███████████░░░░░░░░░░░░░░   43.75 %
+CSS           3 hrs 11 mins         ██████▒░░░░░░░░░░░░░░░░░░   25.39 %
+Other         2 hrs 34 mins         █████░░░░░░░░░░░░░░░░░░░░   20.45 %
+JavaScript    36 mins               █▒░░░░░░░░░░░░░░░░░░░░░░░   04.90 %
+Image (svg)   25 mins               █░░░░░░░░░░░░░░░░░░░░░░░░   03.41 %
+Bash          11 mins               ▒░░░░░░░░░░░░░░░░░░░░░░░░   01.48 %
 ```
 
 <!--END_SECTION:waka-->
